@@ -1,20 +1,30 @@
 import tensorflow as tf
-from tensorflow.keras.applications import Xception
-import os
+import os, re
+from glob import glob
 
-tf.keras.backend.set_learning_phase(0)
-model = Xception(weights='imagenet', include_top=True)
+#from tensorflow.keras.applications import Xception
+#model = Xception(weights='imagenet', include_top=True)
+def exporter(model, export_path_base):
+	versions = []
+	for i in glob(os.path.join(export_path_base,'*')):
+		if os.isdir(i) and re.match(r'^[0-9]+$',i):
+			versions.append(i)
+	if versions == []:
+		version = 0
+	else:
+		version = len(versions)
 
-version = 2
-export_path = '/tmp/classification/{}'.format(int(version))
-os.makedirs(export_path, exist_ok=True)
+	export_path = os.path.join(export_path_base, str(version))
+	os.makedirs(export_path)
 
-# Fetch the Keras session and save the model
-# The signature definition is defined by the input and output tensors
-# And stored with the default serving key
-with tf.keras.backend.get_session() as sess:
-    tf.saved_model.simple_save(
-        sess,
-        export_path,
-        inputs={'input_image': model.input},
-        outputs={t.name:t for t in model.outputs})
+	#disable dropout and other train only ops
+	tf.keras.backend.set_learning_phase(0)
+
+	with tf.keras.backend.get_session() as sess:
+	    tf.saved_model.simple_save(
+	        sess,
+	        export_path,
+	        inputs={'input_image': model.input},
+	        outputs={t.name:t for t in model.outputs})
+
+	print('exported model to {}'.format(export_path))
