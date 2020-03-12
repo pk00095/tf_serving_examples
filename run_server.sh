@@ -1,1 +1,1 @@
-tensorflow_model_server   --rest_api_port=8501   --model_name=xception  --model_base_path="/tmp/classification/"
+tensorflow_model_server   --rest_api_port=8501   --model_name=retinanet  --model_base_path="./tmp/keras_retinanet/"
